@@ -110,12 +110,6 @@ if (reduceMotion) {
 
   causewayObserver.observe(document.querySelector('.causeway'));
 
-  gsap.fromTo(
-    '.movement__plate img',
-    { '--reveal': '-12%' },
-    { '--reveal': '100%', ease: 'none', scrollTrigger: { trigger: '.movement__plate', start: 'top 85%', end: 'top 25%', scrub: true } },
-  );
-
   const plates = gsap.utils.toArray('.twelve .plate__image, .case .plate__image, .oath .plate__image, .seat .plate__image');
   gsap.set(plates, { opacity: 0, clipPath: 'inset(8% 8% 8% 8%)' });
   gsap.set(plates.map(plate => plate.querySelector('img')), { scale: 1.2 });
