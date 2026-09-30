@@ -112,7 +112,8 @@ async function build() {
   const rest = desktop ? 0.12 : 0;
   const raise = desktop ? 0 : 0.08;
   const side = desktop ? -1 : 1;
-  const view = { polar: 0.9, azimuth: -0.45, focus: 0, shift: rest, tilt: -0.5, turn: 0 };
+  const hero = { polar: 0.95, azimuth: 0.6, tilt: -0.45, turn: 0.3 };
+  const view = { ...hero, focus: 0, shift: rest };
   let width;
   let height;
 
@@ -191,7 +192,7 @@ async function build() {
     .to(view, { focus: 0, duration: 1.4 }, 3.6)
     .to(view, { polar: 1.08, azimuth: 0.35, shift: aside, tilt: 0.5, turn: 0.3, duration: 2.6 }, 3.6)
     .to(view, { azimuth: 0.95, duration: 2.2, ease: 'sine.inOut' }, 6.2)
-    .to(view, { polar: 0.95, azimuth: 0.6, shift: rest, tilt: -0.45, duration: 1.6 }, 8.4);
+    .to(view, { ...hero, shift: rest, duration: 1.6 }, 8.4);
 
   labels.forEach((label, index) => {
     if (index) timeline.to(label.layer.position, { z: label.lift, duration: 1.6 }, 3.8 + (index - 1) * 0.35);
@@ -358,7 +359,7 @@ function finishes(THREE, renderer, desktop) {
     return copy;
   };
 
-  const mottle = surface((x, y) => [0, 115 + 140 * height(x, y), 0, 255], 1);
+  const mottle = surface((x, y) => [0, 190 + 65 * height(x, y), 0, 255], 1);
   const frost = surface((x, y) => {
     const normal = new THREE.Vector3((height(x - 1, y) - height(x + 1, y)) * 8, (height(x, y - 1) - height(x, y + 1)) * 8, 1).normalize();
     return [(normal.x + 1) * 127.5, (normal.y + 1) * 127.5, (normal.z + 1) * 127.5, 255];
@@ -373,17 +374,17 @@ function finishes(THREE, renderer, desktop) {
       : new THREE.MeshStandardMaterial({ color, metalness: 1, roughness, ...maps });
 
   return {
-    bridge: metal(0xdcdcdf, 0.34, { anisotropyMap: cotes, anisotropy: 0.45, roughnessMap: movementMottle, normalMap: movementFrost, normalScale: new THREE.Vector2(0.12, 0.12) }),
-    plate: metal(0xd2d2d6, 0.38, { anisotropyMap: perlage, anisotropy: 0.4, roughnessMap: movementMottle, normalMap: movementFrost, normalScale: new THREE.Vector2(0.12, 0.12) }),
+    bridge: metal(0xdcdcdf, 0.34, { anisotropyMap: cotes, anisotropy: 0.45, roughnessMap: movementMottle, normalMap: movementFrost, normalScale: new THREE.Vector2(0.06, 0.06) }),
+    plate: metal(0xd2d2d6, 0.38, { anisotropyMap: perlage, anisotropy: 0.4, roughnessMap: movementMottle, normalMap: movementFrost, normalScale: new THREE.Vector2(0.06, 0.06) }),
     rhodium: metal(0xdcdcdf, 0.1),
     gold: metal(0xf2cf92, 0.32, { anisotropyMap: circular, anisotropy: 0.7, roughnessMap: mottle }),
     polishedGold: metal(0xf2cf92, 0.12),
     soleil: metal(0xb9babd, 0.24, { anisotropyMap: circular, anisotropy: 0.8, roughnessMap: mottle }),
     steel: metal(0xcacbce, 0.08),
     pinkGold: metal(0xf1c6b0, 0.22),
-    satinPinkGold: metal(0xf1c6b0, 0.4, { normalMap: frost, normalScale: new THREE.Vector2(0.3, 0.3), roughnessMap: rotorMottle }),
+    satinPinkGold: metal(0xf1c6b0, 0.4, { normalMap: frost, normalScale: new THREE.Vector2(0.15, 0.15), roughnessMap: rotorMottle }),
     spring: metal(0x3c3e44, 0.3),
-    inlay: metal(0x0a4a2a, 0.45, { normalMap: frost, normalScale: new THREE.Vector2(0.45, 0.45), roughnessMap: rotorMottle }),
+    inlay: metal(0x0a4a2a, 0.36, { normalMap: frost, normalScale: new THREE.Vector2(0.15, 0.15), roughnessMap: rotorMottle }),
     jewel: new THREE.MeshPhysicalMaterial({
       color: 0xd11a4d,
       roughness: 0.05,
