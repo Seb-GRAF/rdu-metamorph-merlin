@@ -601,6 +601,107 @@ body[data-tone="light"] .masthead::before {
   justify-self: center;
 }
 
+.movement__canvas,
+.movement__key,
+.movement__beats {
+  display: none;
+}
+
+.movement--teardown .movement__plate {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  justify-self: stretch;
+  height: calc(100svh * 5);
+  margin-inline: calc(var(--margin) * -1);
+}
+
+.movement--teardown .movement__stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+}
+
+.movement--teardown .plate__image {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding-block: var(--masthead) var(--space-6);
+}
+
+.movement--teardown .plate__image img {
+  width: auto;
+  max-height: 100%;
+}
+
+.movement--teardown .movement__canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.movement--teardown .movement__key {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.movement__key li {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: var(--step--1);
+  line-height: var(--leading-heading);
+  color: var(--paper-dim);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  opacity: 0;
+}
+
+.movement__key b {
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  color: var(--gold);
+}
+
+.movement--teardown .movement__beats {
+  display: grid;
+  position: absolute;
+  left: var(--margin);
+  bottom: calc(var(--space-6) + var(--space-8));
+}
+
+.movement__beats li {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: var(--space-1);
+  opacity: 0;
+}
+
+.movement__beats b {
+  font-size: var(--step-6);
+  font-weight: 900;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--gold);
+}
+
+.movement__beats .caps {
+  color: var(--paper-dim);
+}
+
+.movement--teardown figcaption {
+  position: absolute;
+  bottom: var(--space-6);
+  left: var(--margin);
+  margin: 0;
+}
+
 .seat {
   align-items: center;
   row-gap: var(--space-8);
@@ -977,6 +1078,7 @@ body[data-tone="light"] .masthead::before {
 
   .movement__plate {
     grid-column: 8 / span 5;
+    grid-row: 1 / span 2;
     position: sticky;
     top: var(--space-12);
   }
@@ -984,6 +1086,14 @@ body[data-tone="light"] .masthead::before {
   .movement__plate img {
     width: auto;
     max-height: calc(100svh - var(--space-24));
+  }
+
+  .movement--teardown .movement__plate {
+    position: static;
+  }
+
+  .movement__key li {
+    transform: translate(-100%, -50%);
   }
 
   .seat__plate {

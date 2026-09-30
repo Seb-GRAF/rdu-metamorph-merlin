@@ -11,6 +11,15 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" defer></script>
   <script src="main.js" defer></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="movement.js" type="module"></script>
 </head>
 <body data-section="prologue">
   <header class="masthead grid">
@@ -146,6 +155,33 @@
         <h2 class="title">RD821</h2>
         <p class="movement__type">Monobalancier</p>
         <p class="prose">Roger Dubuis’s automatic mechanical movements display the hours and minutes. All parts of the movement are hand-finished according to the traditional criteria of the Poinçon de Genève.</p>
+      </div>
+      <figure class="plate movement__plate">
+        <div class="movement__stage">
+          <div class="plate__image">
+            <canvas class="movement__canvas" aria-hidden="true"></canvas>
+            <img src="assets/movement.webp" width="836" height="1800" loading="lazy" alt="The RD821 calibre, exploded into its parts, from the rotor down to the main plate">
+            <ol class="movement__key" aria-hidden="true">
+              <li data-layer="rotor"><b>A</b> Rotor</li>
+              <li data-layer="winding"><b>B</b> Winding wheels</li>
+              <li data-layer="balance"><b>C</b> Balance</li>
+              <li data-layer="bridges"><b>D</b> Bridges</li>
+              <li data-layer="pallets"><b>E</b> Pallet fork</li>
+              <li data-layer="train"><b>F</b> Barrel and train</li>
+              <li data-layer="plate"><b>G</b> Main plate</li>
+              <li data-layer="dial"><b>H</b> Dial-side works</li>
+            </ol>
+          </div>
+          <ol class="movement__beats" aria-hidden="true">
+            <li><b>28,800</b> <span class="caps">Vibrations per hour</span></li>
+            <li><b>172</b> <span class="caps">Components</span></li>
+            <li><b>33</b> <span class="caps">Jewels</span></li>
+            <li><b>48</b> <span class="caps">Hours of power reserve</span></li>
+          </ol>
+          <figcaption><b>Plate VII</b> The RD821, taken apart: 172 components.</figcaption>
+        </div>
+      </figure>
+      <div class="movement__text">
         <div class="record">
           <div class="record__group">
             <h3 class="caps">Movement</h3>
@@ -176,12 +212,6 @@
         </div>
         <a class="caps link" href="https://www.rogerdubuis.com/attachments/Ro/Roger%20Dubuis%20RD821%20Caliber%20user%20manual.pdf">Calibre manual (PDF)</a>
       </div>
-      <figure class="plate movement__plate">
-        <div class="plate__image">
-          <img src="assets/movement.webp" width="836" height="1800" loading="lazy" alt="The RD821 calibre, exploded into its parts, from the rotor down to the main plate">
-        </div>
-        <figcaption><b>Plate VII</b> The RD821, taken apart: 172 components.</figcaption>
-      </figure>
     </section>
 
     <section class="seat grid" id="seat" data-title="A seat at the table">
@@ -232,6 +262,7 @@
         <polygon points="30,8.66 35,0 45,0 50,8.66 45,17.32 35,17.32"/>
       </svg>
       <p>Set in Montserrat. Plates and films © Roger Dubuis.</p>
+      <p>Movement model: ETA 6497-1 by Steen Winther, via <a href="https://grabcad.com/library/eta-6497-1-complete-watch-movement">GrabCAD</a>.</p>
       <p>A concept by Liip for Roger Dubuis. Not the official website.</p>
       <a class="caps link" href="https://www.rogerdubuis.com/watches/knights-of-the-round-table/the-metamorph-merlin-45mm-rddbex1118">Current product page</a>
     </div>
