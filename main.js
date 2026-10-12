@@ -6,21 +6,29 @@ gsap.ticker.add(time => lenis.raf(time * 1000));
 gsap.ticker.lagSmoothing(0);
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const runningSection = document.querySelector('.masthead__section');
+const menu = document.querySelector('.menu');
 
-for (const section of document.querySelectorAll('main > section')) {
-  ScrollTrigger.create({
-    trigger: section,
-    start: 'top center',
-    end: 'bottom center',
-    onToggle: self => {
-      if (self.isActive) {
-        runningSection.textContent = section.dataset.title;
-        document.body.dataset.section = section.id;
-      }
-    },
-  });
-}
+document.querySelector('.masthead__menu').addEventListener('click', () => {
+  menu.showModal();
+  lenis.stop();
+});
+
+menu.querySelector('.menu__close').addEventListener('click', () => menu.close());
+
+menu.addEventListener('click', event => {
+  if (event.target === menu) menu.close();
+});
+
+menu.addEventListener('close', () => lenis.start());
+
+const wishlist = document.querySelector('.hero__wishlist');
+let wished = false;
+
+wishlist.addEventListener('click', () => {
+  wished = !wished;
+  wishlist.firstChild.nodeValue = wished ? 'Added to wishlist' : 'Add to wishlist';
+  wishlist.querySelector('use').setAttribute('href', `assets/icons.svg#${wished ? 'heart-full' : 'heart'}`);
+});
 
 const morph = 1;
 const toCrystal = 2;
@@ -62,22 +70,96 @@ gsap.to(caseStrip, {
   scrollTrigger: { trigger: '.case', start: 'top top', end: 'bottom bottom', scrub: true, invalidateOnRefresh: true },
 });
 
-if (reduceMotion) {
-  document.querySelector('.prologue__film').pause();
-} else {
-  document.fonts.load('900 1em Montserrat').then(() => {
+const film = document.querySelector('.film__video');
+const filmToggle = document.querySelector('.film__toggle');
+let filmWanted = !reduceMotion;
+
+const showFilmState = () => {
+  filmToggle.setAttribute('aria-label', film.paused ? 'Play the film' : 'Pause the film');
+  filmToggle.querySelector('use').setAttribute('href', `assets/icons.svg#${film.paused ? 'play' : 'pause'}-20`);
+};
+
+film.addEventListener('play', showFilmState);
+film.addEventListener('pause', showFilmState);
+
+filmToggle.addEventListener('click', () => {
+  filmWanted = film.paused;
+  if (filmWanted) film.play();
+  else film.pause();
+});
+
+ScrollTrigger.create({
+  trigger: '.film',
+  onToggle: self => (self.isActive && filmWanted ? film.play() : film.pause()),
+});
+
+const release = document.querySelector('.release');
+const straps = release.querySelectorAll('.release__strap');
+const fitStrap = () => {
+  const choice = release.querySelector(':checked').value;
+  for (const strap of straps) strap.classList.toggle('release__strap--fitted', strap.dataset.strap === choice);
+};
+
+release.addEventListener('change', fitStrap);
+
+const clock = document.querySelector('.footer__clock time');
+const genevaTime = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit' });
+const showGenevaTime = () => (clock.textContent = genevaTime.format(new Date()));
+
+showGenevaTime();
+setInterval(showGenevaTime, 1000);
+
+if (!reduceMotion) {
+  const hero = document.querySelector('.hero');
+  const soldier = hero.querySelector('.hero__soldier');
+  const sheen = hero.querySelector('.hero__sheen');
+  const light = { x: -40, y: 30 };
+  const paintLight = () => {
+    sheen.style.setProperty('--x', `${light.x}%`);
+    sheen.style.setProperty('--y', `${light.y}%`);
+  };
+  const lightX = gsap.quickTo(light, 'x', { duration: 1.2, ease: 'power3', onUpdate: paintLight });
+  const lightY = gsap.quickTo(light, 'y', { duration: 1.2, ease: 'power3', onUpdate: paintLight });
+  const followPointer = event => {
+    const box = sheen.getBoundingClientRect();
+    lightX(((event.clientX - box.left) / box.width) * 100);
+    lightY(((event.clientY - box.top) / box.height) * 100);
+  };
+
+  gsap.to('.hero__watch', { '--light': 1, duration: 1.8, ease: 'power2.inOut' });
+  hero.addEventListener('pointermove', followPointer);
+
+  Promise.all([document.fonts.load('900 1em Montserrat'), soldier.decode()]).then(() => {
+    const split = SplitText.create('.hero__info > *', { type: 'lines' });
+
     gsap
       .timeline({ defaults: { ease: 'power2.out' } })
-      .to('.prologue__film', { opacity: 1, duration: 1.6 })
-      .to('.prologue__title span', { opacity: 1, filter: 'blur(0px)', duration: 1.2, stagger: 0.15 }, 0.2)
-      .to(['.prologue__subtitle', '.prologue__facts', '.masthead'], { opacity: 1, duration: 0.8 }, 1);
+      .set('.hero__info', { opacity: 1 })
+      .fromTo([soldier, sheen], { opacity: 0, filter: 'blur(12px)' }, { opacity: 1, filter: 'blur(0px)', duration: 1.6, clearProps: 'filter' }, 0)
+      .from(soldier, { scale: 1.03, duration: 2 }, 0)
+      .fromTo(
+        [...split.lines, '.hero__edition', '.hero__actions', '.masthead'],
+        { opacity: 0, filter: 'blur(6px)' },
+        { opacity: 1, filter: 'blur(0px)', duration: 1.1, stagger: 0.06, clearProps: 'filter', onComplete: () => split.revert() },
+        0.3,
+      );
   });
 
-  for (const video of document.querySelectorAll('.causeway video')) {
-    ScrollTrigger.create({ trigger: video, onToggle: self => (self.isActive ? video.play() : video.pause()) });
-  }
+  gsap.to('.hero__watch', {
+    yPercent: 8,
+    ease: 'none',
+    scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
+  });
 
-  for (const text of document.querySelectorAll('.intro__text, .twelve__statement')) {
+  gsap
+    .timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: { trigger: '.film', start: 'top bottom', end: 'bottom bottom', scrub: true },
+    })
+    .fromTo('.film__frame', { clipPath: 'inset(14% 20%)' }, { clipPath: 'inset(0% 0%)' })
+    .fromTo(film, { scale: 1.2 }, { scale: 1 }, 0);
+
+  for (const text of document.querySelectorAll('.intro__text, .oath__quote p')) {
     gsap.from(SplitText.create(text, { type: 'words' }).words, {
       opacity: 0.15,
       stagger: 0.1,
@@ -86,31 +168,20 @@ if (reduceMotion) {
     });
   }
 
-  const bleed = document.querySelector('.forest .plate__image');
+  for (const frame of document.querySelectorAll('.forest__plate .plate__image, .twelve__knight .plate__image')) {
+    const image = frame.querySelector('img');
 
-  gsap
-    .timeline({
-      defaults: { ease: 'none' },
-      scrollTrigger: { trigger: bleed, start: 'top bottom', end: 'bottom bottom', scrub: true, invalidateOnRefresh: true },
-    })
-    .fromTo(bleed, { clipPath: () => `inset(0px ${-parseFloat(getComputedStyle(bleed.parentElement).marginLeft)}px)` }, { clipPath: 'inset(0px 0px)' })
-    .fromTo(bleed.querySelector('img'), { scale: 1.08 }, { scale: 1 }, 0);
+    gsap.fromTo(
+      image,
+      { y: () => frame.clientHeight - image.offsetHeight },
+      { y: 0, ease: 'none', scrollTrigger: { trigger: frame, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true } },
+    );
+  }
 
-  gsap.set('.causeway li', { opacity: 0 });
+  release.querySelector('.release__strap--fitted').classList.remove('release__strap--fitted');
+  ScrollTrigger.create({ trigger: '.release__watch', start: 'top 70%', once: true, onEnter: fitStrap });
 
-  const causewayObserver = new IntersectionObserver(
-    entries => {
-      if (entries[0].isIntersecting) {
-        causewayObserver.disconnect();
-        gsap.to('.causeway li', { opacity: 1, duration: 0.9, stagger: 0.08, ease: 'power2.out' });
-      }
-    },
-    { threshold: 0.2 },
-  );
-
-  causewayObserver.observe(document.querySelector('.causeway'));
-
-  const plates = gsap.utils.toArray('.twelve .plate__image, .case .plate__image, .oath .plate__image, .seat .plate__image');
+  const plates = gsap.utils.toArray('.case .plate__image, .oath .plate__image, .inquiry .plate__image');
   gsap.set(plates, { opacity: 0, clipPath: 'inset(8% 8% 8% 8%)' });
   gsap.set(plates.map(plate => plate.querySelector('img')), { scale: 1.2 });
 
@@ -133,14 +204,24 @@ if (reduceMotion) {
   for (const plate of plates) {
     plateObserver.observe(plate);
   }
+
+  const wordmark = document.querySelector('.footer__wordmark');
+  const glint = wordmark.querySelector('radialGradient');
+  const glintPosition = { x: Number(glint.getAttribute('cx')) };
+  const moveGlint = gsap.quickTo(glintPosition, 'x', { duration: 1.4, ease: 'power3', onUpdate: () => glint.setAttribute('cx', glintPosition.x) });
+
+  document.querySelector('.footer').addEventListener('pointermove', event => {
+    const box = wordmark.getBoundingClientRect();
+    moveGlint(((event.clientX - box.left) / box.width) * 160);
+  });
 }
 
-const seatForm = document.querySelector('.seat__form');
-const seatThanks = document.querySelector('.seat__thanks');
+const inquiryForm = document.querySelector('.inquiry__form');
+const inquiryThanks = document.querySelector('.inquiry__thanks');
 
-seatForm.addEventListener('submit', event => {
+inquiryForm.addEventListener('submit', event => {
   event.preventDefault();
-  seatThanks.querySelector('.seat__name').textContent = new FormData(seatForm).get('name').trim();
-  seatForm.hidden = true;
-  seatThanks.hidden = false;
+  inquiryThanks.querySelector('.inquiry__name').textContent = new FormData(inquiryForm).get('first-name').trim();
+  inquiryForm.hidden = true;
+  inquiryThanks.hidden = false;
 });

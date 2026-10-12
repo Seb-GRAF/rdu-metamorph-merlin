@@ -1,6 +1,7 @@
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const movement = document.querySelector('.movement');
 const plate = movement.querySelector('.movement__plate');
+const legend = movement.querySelector('.movement__legend');
 const plateImage = plate.querySelector('.plate__image');
 const canvas = plate.querySelector('.movement__canvas');
 const context = reduceMotion ? null : canvas.getContext('webgl2', { antialias: true });
@@ -79,14 +80,21 @@ async function build() {
   const secondWheel = pivot('secondWheel', secondCentre.x, secondCentre.y);
   const palletFork = pivot('palletFork', ...palletStaff);
   const balanceLayer = parts.getObjectByName('balance');
+  const ratchetWheel = parts.getObjectByName('415_Ratchet_wheel');
+  const crownWheel = parts.getObjectByName('420_Crown_wheel');
+  const screws = [];
 
-  const labels = [...plate.querySelectorAll('.movement__key li')].map(element => {
-    const layer = parts.getObjectByName(element.dataset.layer);
-    const box = new THREE.Box3().setFromObject(layer);
-    return { element, layer, lift: lifts[element.dataset.layer], middle: (box.min.z + box.max.z) / 2, top: box.max.z, bottom: box.min.z };
+  parts.traverse(object => {
+    if (object.name.includes('Screw')) screws.push({ object, z: object.position.z, out: Math.sign(lifts[object.parent.name]), turn: 0 });
   });
-  const [top] = labels;
-  const bottom = labels.at(-1);
+
+  const layers = Object.entries(lifts).map(([name, lift]) => {
+    const object = parts.getObjectByName(name);
+    const box = new THREE.Box3().setFromObject(object);
+    return { object, lift, z: 0, top: box.max.z, bottom: box.min.z };
+  });
+  const [top] = layers;
+  const bottom = layers.at(-1);
 
   const model = new THREE.Group();
   model.rotation.x = -Math.PI / 2;
@@ -105,15 +113,11 @@ async function build() {
   const right = new THREE.Vector3();
   const up = new THREE.Vector3();
   const point = new THREE.Vector3();
-  const middle = new THREE.Vector3();
-  const edge = new THREE.Vector3();
   const outline = Array.from({ length: 16 }, (_, i) => [Math.cos((i / 16) * Math.PI * 2) * (diameter / 2), Math.sin((i / 16) * Math.PI * 2) * (diameter / 2)]);
-  const aside = desktop ? 0.14 : -0.14;
-  const rest = desktop ? 0.12 : 0;
-  const raise = desktop ? 0 : 0.08;
-  const side = desktop ? -1 : 1;
   const hero = { polar: 0.95, azimuth: 0.6, tilt: -0.45, turn: 0.3 };
-  const view = { ...hero, focus: 0, shift: rest };
+  const teardown = desktop ? { x: -0.26, y: -0.05, w: 0.36, h: 0.84 } : { x: 0, y: 0.14, w: 0.85, h: 0.68 };
+  const opening = desktop ? { x: 0, y: -0.05, w: 0.7, h: 0.84 } : teardown;
+  const view = { ...hero, ...opening, focus: 0 };
   let width;
   let height;
 
@@ -136,9 +140,18 @@ async function build() {
     palletFork.rotation.z = beat % 2 ? 0.14 : -0.14;
     escapeWheel.rotation.z = -beat * (Math.PI / 15);
     secondWheel.rotation.z = -time * (Math.PI / 30);
+    ratchetWheel.rotation.z = top.object.rotation.z / 4;
+    crownWheel.rotation.z = -ratchetWheel.rotation.z * 1.53;
 
-    const stackTop = top.layer.position.z + top.top;
-    const stackBottom = bottom.layer.position.z + bottom.bottom;
+    for (const layer of layers) layer.object.position.z = layer.z;
+
+    for (const screw of screws) {
+      screw.object.position.z = screw.z + screw.out * screw.turn * 4;
+      screw.object.rotation.z = screw.out * screw.turn * Math.PI * 6;
+    }
+
+    const stackTop = top.z + top.top;
+    const stackBottom = bottom.z + bottom.bottom;
     const middleHeight = (stackTop + stackBottom) / 2;
     let fit = 0;
 
@@ -149,12 +162,10 @@ async function build() {
     for (const level of [stackTop, stackBottom]) {
       for (const [x, z] of outline) {
         point.set(x, level - middleHeight, z);
-        const across = point.dot(right);
-        const along = point.dot(up);
         fit = Math.max(
           fit,
-          point.dot(back) + Math.abs(across) / (tan * (width / height) * (0.9 - Math.sign(across) * 2 * view.shift)),
-          point.dot(back) + Math.abs(along) / (tan * (0.9 - Math.sign(along) * 2 * raise)),
+          point.dot(back) + Math.abs(point.dot(right)) / (tan * (width / height) * view.w),
+          point.dot(back) + Math.abs(point.dot(up)) / (tan * view.h),
         );
       }
     }
@@ -164,20 +175,13 @@ async function build() {
     camera.position.copy(back).multiplyScalar(THREE.MathUtils.lerp(fit, 62, view.focus)).add(target);
     camera.lookAt(target);
     scene.environmentRotation.set(view.tilt, view.turn, 0);
-    camera.setViewOffset(width, height, -view.shift * width, raise * height, width, height);
+    camera.setViewOffset(width, height, (-view.x * width) / 2, (view.y * height) / 2, width, height);
     renderer.render(scene, camera);
-
-    for (const label of labels) {
-      middle.set(0, 0, label.layer.position.z + label.middle).applyMatrix4(model.matrixWorld);
-      edge.copy(middle).addScaledVector(right, (side * diameter) / 2).project(camera);
-      middle.project(camera);
-      label.element.style.translate = `${((edge.x + 1) / 2) * width + side * 16}px ${((1 - middle.y) / 2) * height}px`;
-    }
   };
 
   const timeline = gsap.timeline({
     defaults: { ease: 'power2.inOut' },
-    scrollTrigger: { trigger: plate, start: 'top top', end: 'bottom bottom', scrub: 1 },
+    scrollTrigger: { trigger: plate, start: 'top top', end: 'bottom 150%', scrub: 1 },
   });
   const beats = [...plate.querySelectorAll('.movement__beats li')];
   const show = (beat, at, until) => {
@@ -186,33 +190,32 @@ async function build() {
   };
 
   timeline
-    .to(top.layer.position, { z: top.lift, duration: 1.8 }, 1)
-    .to(view, { polar: 0.62, azimuth: -0.15, focus: 1, duration: 2.2 }, 1)
+    .to(top, { z: top.lift, duration: 1.8 }, 1)
+    .to(view, { polar: 0.62, azimuth: -0.15, focus: 1, ...teardown, duration: 2.2 }, 1)
     .to(view, { tilt: 1, turn: 0.7, duration: 1.2 }, 1)
+    .to(canvas, { '--scrim': 1, duration: 1 }, 1.4)
+    .to(screws, { turn: 1, duration: 0.8, stagger: 0.03 }, 3.2)
     .to(view, { focus: 0, duration: 1.4 }, 3.6)
-    .to(view, { polar: 1.08, azimuth: 0.35, shift: aside, tilt: 0.5, turn: 0.3, duration: 2.6 }, 3.6)
+    .to(view, { polar: 1.08, azimuth: 0.35, tilt: 0.5, turn: 0.3, duration: 2.6 }, 3.6)
+    .to(canvas, { '--scrim': 0, duration: 1 }, 3.8)
     .to(view, { azimuth: 0.95, duration: 2.2, ease: 'sine.inOut' }, 6.2)
-    .to(view, { ...hero, shift: rest, duration: 1.6 }, 8.4);
+    .to(view, { ...hero, duration: 1.6 }, 8.4)
+    .to(screws, { turn: 0, duration: 0.8, stagger: { each: 0.03, from: 'end' } }, 9.6)
+    .to(top, { z: 0, duration: 1.2 }, 10.2);
 
-  labels.forEach((label, index) => {
-    if (index) timeline.to(label.layer.position, { z: label.lift, duration: 1.6 }, 3.8 + (index - 1) * 0.35);
+  layers.slice(1).forEach((layer, index, rest) => {
     timeline
-      .to(label.element, { opacity: 1, duration: 0.6 }, 4.2 + index * 0.35)
-      .to(label.layer.position, { z: 0, duration: 1.2 }, 8.4 + (labels.length - 1 - index) * 0.1);
+      .to(layer, { z: layer.lift, duration: 1.6 }, 3.8 + index * 0.35)
+      .to(layer, { z: 0, duration: 1.2 }, 8.4 + (rest.length - 1 - index) * 0.06);
   });
-
-  timeline.to(
-    labels.map(label => label.element),
-    { opacity: 0, duration: 0.5 },
-    8.2,
-  );
 
   show(beats[0], 2.2, 3.6);
   show(beats[1], 4.6, 6.4);
   show(beats[2], 6.6, 8.2);
-  show(beats[3], 8.8);
+  show(beats[3], 8.8, desktop ? 11.4 : undefined);
+  show(legend, 11.8);
 
-  timeline.to(top.layer.rotation, { z: -Math.PI * 4, duration: timeline.duration(), ease: 'none' }, 0);
+  timeline.to(top.object.rotation, { z: -Math.PI * 4, duration: timeline.duration(), ease: 'none' }, 0);
   plateImage.querySelector('img').hidden = true;
 
   ScrollTrigger.create({
