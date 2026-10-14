@@ -1,28 +1,30 @@
 @font-face {
-  font-family: "Montserrat";
-  src: url("assets/fonts/montserrat-light.ttf") format("truetype");
-  font-weight: 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Montserrat";
-  src: url("assets/fonts/montserrat-regular.woff2") format("woff2");
+  font-family: "Sabon";
+  src: url("assets/fonts/sabon-regular.ttf") format("truetype");
   font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Montserrat";
-  src: url("assets/fonts/montserrat-medium.woff2") format("woff2");
-  font-weight: 500;
+  font-family: "Sabon";
+  src: url("assets/fonts/sabon-italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Montserrat";
-  src: url("assets/fonts/montserrat-black.woff2") format("woff2");
-  font-weight: 900;
+  font-family: "Sabon";
+  src: url("assets/fonts/sabon-bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sabon";
+  src: url("assets/fonts/sabon-bold-italic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
   font-display: swap;
 }
 
@@ -42,7 +44,7 @@
   --forest: oklch(0.25 0.045 158);
   --forest-glow: oklch(0.33 0.055 158);
 
-  --font: "Montserrat", Helvetica, Arial, sans-serif;
+  --font: "Sabon", Georgia, "Times New Roman", serif;
 
   --unit: 0.5rem;
   --space-1: var(--unit);

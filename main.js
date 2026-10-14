@@ -129,7 +129,7 @@ if (!reduceMotion) {
   gsap.to('.hero__watch', { '--light': 1, duration: 1.8, ease: 'power2.inOut' });
   hero.addEventListener('pointermove', followPointer);
 
-  Promise.all([document.fonts.load('900 1em Montserrat'), soldier.decode()]).then(() => {
+  Promise.all([document.fonts.load('900 1em Sabon'), soldier.decode()]).then(() => {
     const split = SplitText.create('.hero__info > *', { type: 'lines' });
 
     gsap
